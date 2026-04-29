@@ -1,0 +1,39 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# ── Node ──
+node_modules/
+dist/
+dist-ssr/
+*.log
+
+# ── App data (regenerated at runtime) ──
+*.db
+backend/chroma_data/
+chroma_data/
+
+# ── Secrets ──
+.env
+.env.local
+.env.*.local
+
+# ── Editor / OS ──
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+Thumbs.db
+
+# ── Build / coverage ──
+*.local
+.coverage
+htmlcov/
+
+# ── Project-local artefacts not for repo ──
+.claude/
