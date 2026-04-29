@@ -22,7 +22,7 @@ def analyze_project_structure(workspace_id: int) -> str:
     try:
         workspace = db.get(Workspace, workspace_id)
         if not workspace:
-            return f"错误：工作区 {workspace_id} 不存在"
+            return f"Error: workspace {workspace_id} not found"
 
         files = (
             db.query(File)
@@ -32,13 +32,11 @@ def analyze_project_structure(workspace_id: int) -> str:
         )
 
         if not files:
-            return "该工作区暂无文件，请先扫描。"
+            return "This workspace has no files yet — run a scan first."
 
-        # 文件类型统计
         type_counter = Counter(f.file_type for f in files)
         total_size = sum(f.size_bytes for f in files)
 
-        # 目录树（用相对路径）
         base = workspace.path.rstrip(os.sep)
         tree_lines = []
         for f in files:
@@ -47,18 +45,18 @@ def analyze_project_structure(workspace_id: int) -> str:
             tree_lines.append(f"  {rel}  ({size})")
 
         lines = [
-            f"工作区「{workspace.name}」项目结构分析：",
-            f"路径: {workspace.path}",
-            f"文件总数: {len(files)}",
-            f"总大小: {total_size / 1024:.1f}KB",
+            f'Workspace "{workspace.name}" — structure:',
+            f"path: {workspace.path}",
+            f"files: {len(files)}",
+            f"total size: {total_size / 1024:.1f}KB",
             "",
-            "文件类型统计:",
+            "file types:",
         ]
         for ftype, count in type_counter.most_common():
-            lines.append(f"  .{ftype}: {count} 个")
+            lines.append(f"  .{ftype}: {count}")
 
         lines.append("")
-        lines.append("目录结构:")
+        lines.append("tree:")
         lines.extend(tree_lines)
 
         return "\n".join(lines)
@@ -76,7 +74,7 @@ def explain_function(workspace_id: int, query: str) -> str:
     try:
         files = db.query(File).filter(File.workspace_id == workspace_id).all()
         if not files:
-            return "该工作区暂无文件。"
+            return "This workspace has no files yet."
 
         max_read = get_settings().max_file_read_size
         results = []
@@ -98,7 +96,7 @@ def explain_function(workspace_id: int, query: str) -> str:
                     start = max(0, i - 3)
                     end = min(len(lines), i + 15)
                     snippet = "\n".join(lines[start:end])
-                    results.append(f"文件: {f.filename} (第{i + 1}行)\n```\n{snippet}\n```")
+                    results.append(f"file: {f.filename} (line {i + 1})\n```\n{snippet}\n```")
 
                     if len(results) >= 5:
                         break
@@ -106,9 +104,9 @@ def explain_function(workspace_id: int, query: str) -> str:
                 break
 
         if not results:
-            return f"未找到包含 \"{query}\" 的函数或类定义。"
+            return f'No function or class definition matching "{query}".'
 
-        return f"找到 {len(results)} 个匹配的定义：\n\n" + "\n\n".join(results)
+        return f'Found {len(results)} matching definitions:\n\n' + "\n\n".join(results)
     finally:
         db.close()
 
@@ -125,7 +123,7 @@ def find_dependencies(workspace_id: int) -> str:
         )
 
         if not files:
-            return "该工作区没有代码文件。"
+            return "No code files in this workspace."
 
         max_read = get_settings().max_file_read_size
         file_deps = {}
@@ -153,15 +151,15 @@ def find_dependencies(workspace_id: int) -> str:
                 file_deps[f.filename] = imports
 
         if not file_deps:
-            return "未发现 import 语句。"
+            return "No import statements found."
 
-        lines = [f"共 {len(file_deps)} 个文件有依赖：\n"]
+        lines = [f"{len(file_deps)} file(s) with dependencies:\n"]
         for filename, imports in file_deps.items():
             lines.append(f"{filename}:")
-            for imp in imports[:10]:  # 每个文件最多显示 10 条
+            for imp in imports[:10]:
                 lines.append(f"  {imp}")
             if len(imports) > 10:
-                lines.append(f"  ... 还有 {len(imports) - 10} 条")
+                lines.append(f"  ... and {len(imports) - 10} more")
             lines.append("")
 
         return "\n".join(lines)
@@ -176,28 +174,28 @@ def create_code_tools() -> ToolRegistry:
 
     registry.register(Tool(
         name="analyze_project_structure",
-        description="分析工作区的项目结构，返回目录树和文件类型统计",
+        description="Summarise the workspace's directory tree and file-type breakdown.",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
         },
         function=analyze_project_structure,
     ))
 
     registry.register(Tool(
         name="explain_function",
-        description="搜索函数或类的定义代码并返回上下文。query 必须是函数名或类名（如 create_app、BaseAgent），不要传文件名。",
+        description="Find the definition code for a function or class. The query must be a name (e.g. create_app, BaseAgent) — not a filename.",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
-            "query": {"type": "string", "description": "函数名或类名（如 create_app、Settings），不是文件名"},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
+            "query": {"type": "string", "description": "function or class name (e.g. create_app, Settings)"},
         },
         function=explain_function,
     ))
 
     registry.register(Tool(
         name="find_dependencies",
-        description="分析代码文件的 import 语句，列出模块依赖关系",
+        description="Parse code-file import statements and list dependencies.",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
         },
         function=find_dependencies,
     ))

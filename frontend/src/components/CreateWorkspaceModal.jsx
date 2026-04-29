@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { request } from '../api/client'
 import { X, FolderOpen, ArrowUp } from 'lucide-react'
+import { useLang } from '../i18n'
 
 export default function CreateWorkspaceModal({ onSubmit, onClose }) {
+  const { t } = useLang()
   const [name, setName] = useState('')
   const [path, setPath] = useState('')
   const [showBrowser, setShowBrowser] = useState(false)
@@ -46,7 +48,7 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
       >
         {/* header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-edge">
-          <h2 className="text-[15px] font-medium">新建工作区</h2>
+          <h2 className="text-[15px] font-medium">{t('modal.workspace_title')}</h2>
           <button onClick={onClose} className="text-ink-muted hover:text-ink transition-colors">
             <X size={18} />
           </button>
@@ -55,11 +57,11 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {/* name */}
           <div>
-            <label className="block text-[11px] text-ink-muted mb-1.5 uppercase tracking-wider font-medium">名称</label>
+            <label className="block text-[11px] text-ink-muted mb-1.5 uppercase tracking-wider font-medium">{t('modal.name')}</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="我的项目"
+              placeholder={t('modal.name_placeholder')}
               className="w-full bg-surface border border-edge rounded-lg px-3 py-2.5 text-[13px] text-ink focus:border-accent/60 transition-colors"
               autoFocus
             />
@@ -67,7 +69,7 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
 
           {/* path */}
           <div>
-            <label className="block text-[11px] text-ink-muted mb-1.5 uppercase tracking-wider font-medium">路径</label>
+            <label className="block text-[11px] text-ink-muted mb-1.5 uppercase tracking-wider font-medium">{t('modal.path')}</label>
             <div className="flex gap-2">
               <input
                 value={path}
@@ -97,7 +99,7 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
                 )}
                 <span className="font-mono truncate flex-1">{browsePath}</span>
                 <button type="button" onClick={() => pick(browsePath)} className="text-accent hover:text-accent-light text-[11px] font-medium shrink-0">
-                  选择此目录
+                  {t('modal.pick_this')}
                 </button>
               </div>
               <div className="max-h-44 overflow-y-auto">
@@ -115,12 +117,12 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
                       onClick={() => pick(d.path)}
                       className="text-[11px] text-ink-muted hover:text-accent transition-colors shrink-0"
                     >
-                      选择
+                      {t('modal.pick')}
                     </button>
                   </div>
                 ))}
                 {dirs.length === 0 && (
-                  <p className="px-3 py-3 text-[12px] text-ink-muted text-center">空目录</p>
+                  <p className="px-3 py-3 text-[12px] text-ink-muted text-center">{t('modal.empty_dir')}</p>
                 )}
               </div>
             </div>
@@ -135,14 +137,14 @@ export default function CreateWorkspaceModal({ onSubmit, onClose }) {
               onClick={onClose}
               className="px-4 py-2 rounded-lg text-[13px] text-ink-muted hover:text-ink hover:bg-hover transition-colors"
             >
-              取消
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={!name.trim() || !path.trim() || submitting}
               className="px-5 py-2 rounded-lg text-[13px] bg-accent text-deep font-medium hover:bg-accent-light disabled:opacity-35 disabled:cursor-not-allowed transition-colors"
             >
-              {submitting ? '创建中...' : '创建'}
+              {submitting ? t('modal.creating') : t('modal.create')}
             </button>
           </div>
         </form>

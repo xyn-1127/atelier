@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Lightbulb, CheckCircle2, Loader, Circle } from 'lucide-react'
+import { useLang } from '../i18n'
 
 const STATUS_ICON = {
   done:    <CheckCircle2 size={13} className="text-jade shrink-0" />,
@@ -9,6 +10,7 @@ const STATUS_ICON = {
 
 export default function PlanBlock({ plan }) {
   const [open, setOpen] = useState(true)
+  const { t } = useLang()
 
   if (!plan?.steps?.length) return null
 
@@ -21,7 +23,7 @@ export default function PlanBlock({ plan }) {
         className="w-full flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-ink-secondary hover:text-ink transition-colors"
       >
         <Lightbulb size={13} className="text-accent shrink-0" />
-        <span className="font-medium">执行计划</span>
+        <span className="font-medium">{t('plan.title')}</span>
         <span className="text-ink-muted">({doneCount}/{plan.steps.length})</span>
         <span className="flex-1" />
         {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
@@ -48,7 +50,7 @@ export default function PlanBlock({ plan }) {
                   <span className="text-[13px] text-ink-secondary">{step.task}</span>
                   {deps.length > 0 && (
                     <span className="text-[10px] text-ink-muted ml-2">
-                      ← 依赖步骤 {deps.join(', ')}
+                      {t('plan.depends_on')} {deps.join(', ')}
                     </span>
                   )}
                 </div>

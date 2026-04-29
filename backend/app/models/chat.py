@@ -13,7 +13,7 @@ class Chat(Base):
                                                                                                                                     
     id: Mapped[int] = mapped_column(primary_key=True)
     workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id"))                                                         
-    title: Mapped[str] = mapped_column(String(255), default="新对话")
+    title: Mapped[str] = mapped_column(String(255), default="New chat")
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     compacted_count: Mapped[int] = mapped_column(default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())                                              

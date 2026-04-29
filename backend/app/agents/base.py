@@ -214,12 +214,12 @@ class BaseAgent:
 
         # ── 超过最大循环 → 提示用户 + 强制 LLM 总结已有信息 ──
         logger.warning("Agent '%s' exceeded max iterations (%d), forcing final answer", self.name, self.max_iterations)
-        notice = f"\n\n---\n*（已达到最大工具调用次数 {self.max_iterations} 次，基于已收集的信息生成回答）*\n\n"
+        notice = f"\n\n---\n*(reached the {self.max_iterations}-call tool limit — answering from what's been gathered so far)*\n\n"
         yield ("content_chunk", notice)
         final_content += notice
 
         try:
-            messages.append({"role": "user", "content": "你已经调用了太多次工具。请直接基于目前收集到的信息给出回答，不要再调用任何工具。"})
+            messages.append({"role": "user", "content": "You have called tools too many times. Answer now based on what you already have — do not call any more tools."})
             for event_type, data in chat_completion_with_tools_stream(messages, []):
                 if event_type == "content_chunk":
                     final_content += data
@@ -235,7 +235,18 @@ class BaseAgent:
     # ─── 内部辅助方法 ───
 
     def _build_initial_messages(self, task: str, context: dict | None) -> list[dict]:
-        messages = [{"role": "system", "content": self.system_prompt}]
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            # Hard language-mirror rule. Without this, models like deepseek-chat tend to
+            # default to Chinese once any Chinese tokens (filenames, prior outputs) appear
+            # in context, even when the user is writing in English.
+            {"role": "system", "content":
+                "LANGUAGE RULE — NON-NEGOTIABLE: write your reply in the SAME language the "
+                "user wrote their last message in. If the user message is in English, "
+                "every word of your output — headings, table cells, bullets, code comments, "
+                "everything — must be in English. Do NOT add Chinese translations or "
+                "commentary. If the user message is in Chinese, reply in Chinese only."},
+        ]
         if context:
             output_hint = context.get("output_hint")
             workspace_id = context.get("workspace_id")
@@ -252,7 +263,7 @@ class BaseAgent:
                         if memories:
                             mem_text = format_memories_for_prompt(memories)
                             messages.append({"role": "system",
-                                             "content": f"关于这个工作区的已知信息：\n{mem_text}"})
+                                             "content": f"What we already know about this workspace:\n{mem_text}"})
                     finally:
                         db.close()
                 except Exception:
@@ -260,11 +271,11 @@ class BaseAgent:
 
             if other_ctx:
                 context_text = "\n".join(f"- {k}: {v}" for k, v in other_ctx.items())
-                messages.append({"role": "system", "content": f"当前上下文信息：\n{context_text}"})
+                messages.append({"role": "system", "content": f"Context:\n{context_text}"})
 
             if output_hint:
                 messages.append({"role": "system",
-                                 "content": f"输出要求：{output_hint}。请严格控制回答长度。"})
+                                 "content": f"Output requirement: {output_hint}. Stay strictly within this limit."})
 
         messages.append({"role": "user", "content": task})
         return messages

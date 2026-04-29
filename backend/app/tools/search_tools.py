@@ -24,14 +24,14 @@ def semantic_search(workspace_id: int, query: str, top_k: int = 5) -> str:
     results = vector_search(workspace_id, query, top_k=top_k)
 
     if not results:
-        return "未找到相关内容。请确认工作区已建立索引（调用建立索引功能）。"
+        return "No matches. Make sure the workspace has been indexed."
 
-    lines = [f"找到 {len(results)} 条相关结果：\n"]
+    lines = [f"Found {len(results)} matches:\n"]
     for i, r in enumerate(results, 1):
-        lines.append(f"--- 结果 {i} ---")
-        lines.append(f"来源: {r['filename']} (文件ID={r['file_id']}, 第{r['chunk_index']}块)")
-        lines.append(f"相关度: {1 - r['distance']:.2f}")  # 距离越小越相关，转成相关度
-        lines.append(f"内容:\n{r['content'][:300]}")
+        lines.append(f"--- match {i} ---")
+        lines.append(f"source: {r['filename']} (file_id={r['file_id']}, chunk={r['chunk_index']})")
+        lines.append(f"score: {1 - r['distance']:.2f}")
+        lines.append(f"content:\n{r['content'][:300]}")
         lines.append("")
     return "\n".join(lines)
 
@@ -55,11 +55,10 @@ def keyword_search(workspace_id: int, keyword: str) -> str:
         )
 
         if not results:
-            return f"未找到包含 \"{keyword}\" 的内容。"
+            return f'No matches for "{keyword}".'
 
-        lines = [f"找到 {len(results)} 条包含 \"{keyword}\" 的结果：\n"]
+        lines = [f'Found {len(results)} matches for "{keyword}":\n']
         for i, (chunk, filename) in enumerate(results, 1):
-            # 截取关键词附近的上下文
             content = chunk.content
             idx = content.lower().find(keyword.lower())
             start = max(0, idx - 50)
@@ -70,9 +69,9 @@ def keyword_search(workspace_id: int, keyword: str) -> str:
             if end < len(content):
                 context = context + "..."
 
-            lines.append(f"--- 结果 {i} ---")
-            lines.append(f"来源: {filename} (文件ID={chunk.file_id}, 第{chunk.chunk_index}块)")
-            lines.append(f"匹配上下文: {context}")
+            lines.append(f"--- match {i} ---")
+            lines.append(f"source: {filename} (file_id={chunk.file_id}, chunk={chunk.chunk_index})")
+            lines.append(f"context: {context}")
             lines.append("")
         return "\n".join(lines)
     finally:
@@ -85,21 +84,21 @@ def create_search_tools() -> ToolRegistry:
 
     registry.register(Tool(
         name="semantic_search",
-        description="语义搜索：根据自然语言描述，在工作区中找到语义最相关的文件片段。适合用自然语言提问。",
+        description="Semantic / vector search over the workspace. Best for natural-language questions.",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
-            "query": {"type": "string", "description": "搜索查询，用自然语言描述想找的内容"},
-            "top_k": {"type": "integer", "description": "返回结果数量", "required": False},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
+            "query": {"type": "string", "description": "what you are looking for, in natural language"},
+            "top_k": {"type": "integer", "description": "number of results to return", "required": False},
         },
         function=semantic_search,
     ))
 
     registry.register(Tool(
         name="keyword_search",
-        description="关键词搜索：精确匹配文件中的关键词（函数名、变量名、类名等）。",
+        description="Exact keyword search across the workspace (function names, variable names, etc.).",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
-            "keyword": {"type": "string", "description": "要搜索的关键词"},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
+            "keyword": {"type": "string", "description": "the keyword to find"},
         },
         function=keyword_search,
     ))

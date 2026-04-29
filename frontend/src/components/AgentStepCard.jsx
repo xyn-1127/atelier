@@ -2,18 +2,13 @@ import { useState } from 'react'
 import { ChevronDown, ChevronRight, CheckCircle2, Loader } from 'lucide-react'
 import ToolCallBlock from './ToolCallBlock'
 import Markdown from './Markdown'
-
-const AGENT_LABELS = {
-  file_agent:   '文件分析',
-  search_agent: '搜索',
-  code_agent:   '代码分析',
-  writer_agent: '写作',
-}
+import { useLang } from '../i18n'
 
 export default function AgentStepCard({ step, className = '' }) {
   const [open, setOpen] = useState(true)
+  const { t } = useLang()
 
-  const label = AGENT_LABELS[step.agent_name] || step.agent_name
+  const label = t(`agent.${step.agent_name}`) || step.agent_name
   const isRunning = step.status === 'running'
   const isDone = step.status === 'done'
   const dur = step.metrics?.duration_ms
@@ -80,7 +75,7 @@ export default function AgentStepCard({ step, className = '' }) {
           {isRunning && !step.content && !hasEntries && (
             <div className="px-3.5 py-3 flex items-center gap-2 text-[13px] text-ink-muted">
               <Loader size={13} className="animate-spin" />
-              <span>执行中...</span>
+              <span>{t('agent.running')}</span>
             </div>
           )}
         </div>

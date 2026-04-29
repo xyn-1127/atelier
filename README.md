@@ -2,9 +2,11 @@
 
 > A local-first AI copilot. You bring a workspace, it brings four specialist agents — they read, search, code-explain and write notes back to disk, all coordinated by an orchestrator that plans the run as a DAG.
 
-Your data never leaves the machine. The only outbound call is the LLM API of your choice (defaults to DeepSeek; any OpenAI-compatible endpoint works).
+Your data never leaves the machine. The only outbound call is the LLM API of your choice (defaults to DeepSeek; any OpenAI-compatible endpoint works). UI ships in English & 中文 with a one-click toggle.
 
-![Atelier — multi-agent run](docs/media/demo.gif)
+![Atelier — multi-agent run, sped 11×](docs/media/demo.gif)
+
+*The clip above is the real run, sped up to fit in ten seconds — no edits, no cuts.*
 
 ---
 
@@ -22,12 +24,12 @@ Everything is streamed over SSE, so a slow 30-second agent run feels alive — y
 
 | | |
 |---|---|
-| ![Empty state](docs/media/00-empty.png) | ![Hero — dark](docs/media/01-hero-dark.png) |
-| Empty state. Add a workspace by name + path. | Agent mode. The orchestrator plans 3 steps with `depends_on` edges; the file agent already started reading. |
-| ![Search agent](docs/media/03-agent-search.png) | ![Writer agent](docs/media/04-agent-write.png) |
-| Search agent — semantic + keyword in parallel, structured output with priority colours. | Writer agent — recalls memory, generates a 5-section markdown report, calls `save_note` and `save_memory`. |
-| ![Notes panel](docs/media/05-notes.png) | ![Light theme](docs/media/02-hero-light.png) |
-| Notes panel — every saved markdown is one click away. | Light theme — same workspace, warm sand palette. |
+| ![Empty state](docs/media/00-empty.png) | ![Plan](docs/media/01-plan.png) |
+| Workspace list. Add one by name + path. | Orchestrator's plan: three specialist agents with `depends_on` edges. |
+| ![Tools in flight](docs/media/02-tools.png) | ![Writer composing](docs/media/03-writer.png) |
+| File agent + search agent reading and indexing in parallel — every tool call streams to the UI. | Writer agent — recalls memory, then composes a long Markdown summary on the fly. |
+| ![Saved](docs/media/04-saved.png) | ![Light theme](docs/media/05-light.png) |
+| Final state — `save_note` lands the document into the workspace, `save_memory` captures the takeaway. | Light theme — same workspace, warm sand palette. EN/中 toggle in the bottom-left. |
 
 ## Architecture
 

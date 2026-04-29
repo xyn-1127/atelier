@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { fetchChat, sendMessageStream, resumeMessageStream } from '../api/chat'
 import { Send, Brain, Bot, PanelRightOpen, PanelRightClose, StopCircle } from 'lucide-react'
 import MessageItem from './MessageItem'
+import { useLang } from '../i18n'
 
 /** Parse execution_json from loaded messages into display-ready fields */
 function enrichMessages(msgs) {
@@ -26,6 +27,7 @@ function enrichMessages(msgs) {
 }
 
 export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes, onChatsChanged }) {
+  const { t } = useLang()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -320,12 +322,12 @@ export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes
           {workspaceId ? (
             <>
               <div className="text-4xl mb-3 opacity-15 text-accent">&#9670;</div>
-              <p className="text-ink-muted text-[15px]">选择或创建一个对话</p>
+              <p className="text-ink-muted text-[15px]">{t('chat.empty_chat')}</p>
             </>
           ) : (
             <>
               <div className="font-display text-3xl font-bold mb-2 tracking-tight">Atelier</div>
-              <p className="text-ink-secondary text-[14px]">选择一个工作区开始</p>
+              <p className="text-ink-secondary text-[14px]">{t('chat.empty_workspace')}</p>
             </>
           )}
         </div>
@@ -342,7 +344,7 @@ export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes
           active={showNotes}
           onClick={onToggleNotes}
           icon={showNotes ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-          label="笔记"
+          label={t('notes.title')}
         />
       </div>
 
@@ -350,7 +352,7 @@ export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes
       <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 py-5">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && !streaming && (
-            <p className="text-center text-ink-muted text-[13px] py-16 anim-fade">发送一条消息开始对话</p>
+            <p className="text-center text-ink-muted text-[13px] py-16 anim-fade">{t('chat.send_to_start')}</p>
           )}
 
           {messages.map(m => <MessageItem key={m.id} message={m} />)}
@@ -367,7 +369,7 @@ export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes
         <div className="max-w-3xl mx-auto">
           {/* mode toggles */}
           <div className="flex items-center gap-2 mb-2">
-            <ToggleBtn active={useThinking} onClick={() => setUseThinking(v => !v)} icon={<Brain size={13} />} label="深度思考" />
+            <ToggleBtn active={useThinking} onClick={() => setUseThinking(v => !v)} icon={<Brain size={13} />} label={t('chat.deep_thinking')} />
             <ToggleBtn active={useAgent} onClick={() => setUseAgent(v => !v)} icon={<Bot size={13} />} label="Agent" />
           </div>
           <div className="flex items-end gap-2">
@@ -376,7 +378,7 @@ export default function ChatView({ chatId, workspaceId, showNotes, onToggleNotes
             value={input}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+            placeholder={t('chat.placeholder')}
             rows={1}
             className="flex-1 bg-surface border border-edge rounded-xl px-4 py-3 text-[15px] text-ink resize-none focus:border-accent/60 transition-colors leading-relaxed"
             style={{ minHeight: 46, maxHeight: 140 }}

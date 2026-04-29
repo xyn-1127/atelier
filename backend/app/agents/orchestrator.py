@@ -22,33 +22,34 @@ from app.schemas.agent import ExecutionPlan, PlanStep
 logger = logging.getLogger(__name__)
 
 PLAN_SYSTEM_PROMPT = """\
-你是一个任务规划专家。用户给了一个任务，你需要分析意图并制定执行计划。
+You are a task-planning specialist. The user has given you a task — analyse what they need and produce an execution plan.
 
-可用的 Agent：
+Available agents:
 {agents_description}
 
-请返回 JSON 格式的执行计划（不要返回其他内容，只返回 JSON）：
+Return a JSON execution plan (JSON only, nothing else):
 {{
-  "reasoning": "你的分析思路（简短说明为什么这么规划）",
+  "reasoning": "your short analysis explaining the plan",
   "steps": [
-    {{"agent_name": "agent名称", "task": "具体任务描述", "output_hint": "输出要求", "depends_on": []}}
+    {{"agent_name": "agent_name", "task": "specific task description", "output_hint": "what the output should be", "depends_on": []}}
   ]
 }}
 
-规则：
-1. 如果任务很简单，只需要一个 Agent，就只输出一步
-2. 如果任务复杂，可以拆成多步
-3. 每步的 task 要具体，不要太笼统
-4. agent_name 必须是上面列出的名称之一
-5. 不要超过 5 步
-6. output_hint 控制 Agent 的输出长度：
-   - 中间步骤（为后续步骤提供信息）：用 "简要概括，300字以内"
-   - 最后一步（直接面向用户）：用 "详细回答" 或省略
-   - 这很重要，中间步骤输出太长会浪费时间
-7. depends_on 标注步骤依赖（索引从 0 开始）：
-   - 需要前一步结果才能执行：写 "depends_on": [0]
-   - 互不依赖的步骤：写 "depends_on": []（可以并行）
-   - 例：分析结构(0) 和 搜索内容(1) 可并行，写总结(2) 依赖 [0,1]
+Rules:
+1. If the task is simple and one agent is enough, return one step.
+2. If it is complex, split it across steps.
+3. Each step's `task` must be specific, not vague.
+4. agent_name must be one of the agents listed above.
+5. No more than 5 steps.
+6. output_hint controls how long the agent's output is:
+   - Intermediate steps (feeding later steps): use "brief summary, ≤300 chars"
+   - Final step (shown to the user): use "detailed answer" or omit
+   - This matters — long intermediate output wastes time.
+7. depends_on lists step dependencies (0-indexed):
+   - Needs a previous step's result: "depends_on": [0]
+   - No dependency: "depends_on": []  (those steps run in parallel)
+   - Example: structure (0) and search (1) can run in parallel; summary (2) depends on [0, 1].
+8. Match the user's language. Write `reasoning`, every `task` and every `output_hint` in the same language the user used in their message — English if they wrote in English, Chinese if they wrote in Chinese.
 """
 
 _SENTINEL = object()  # 标记线程完成
@@ -63,6 +64,9 @@ class Orchestrator:
 
         messages = [
             {"role": "system", "content": prompt},
+            {"role": "system", "content":
+                "Write the `reasoning` and each step's `task` / `output_hint` in the same language "
+                "the user used. If the user writes in English, write them in English; if in Chinese, in Chinese."},
         ]
 
         if context and context.get("workspace_id"):
@@ -75,7 +79,7 @@ class Orchestrator:
                     if memories:
                         mem_text = format_memories_for_prompt(memories)
                         messages.append({"role": "system",
-                                         "content": f"关于这个工作区的已知信息：\n{mem_text}\n\n如果已知信息足以回答用户问题，可以减少分析步骤。"})
+                                         "content": f"What we already know about this workspace:\n{mem_text}\n\nIf this is enough to answer the user, skip redundant steps."})
                 finally:
                     db.close()
             except Exception as e:
@@ -83,7 +87,7 @@ class Orchestrator:
 
         if context:
             context_text = "\n".join(f"- {k}: {v}" for k, v in context.items())
-            messages.append({"role": "system", "content": f"当前上下文：\n{context_text}"})
+            messages.append({"role": "system", "content": f"Context:\n{context_text}"})
 
         messages.append({"role": "user", "content": task})
 

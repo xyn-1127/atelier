@@ -5,6 +5,7 @@ import ToolCallBlock from './ToolCallBlock'
 import PlanBlock from './PlanBlock'
 import AgentStepCard from './AgentStepCard'
 import Markdown from './Markdown'
+import { useLang } from '../i18n'
 
 /** Group agent steps into parallel waves based on plan dependencies */
 function computeWaves(plan, agentSteps) {
@@ -34,6 +35,7 @@ function computeWaves(plan, agentSteps) {
 }
 
 export default function MessageItem({ message, isStreaming, isThinking }) {
+  const { t } = useLang()
   const isUser = message.role === 'user'
   const [agentOpen, setAgentOpen] = useState(true)
 
@@ -77,7 +79,7 @@ export default function MessageItem({ message, isStreaming, isThinking }) {
               className="w-full flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-ink-secondary hover:text-ink bg-surface/40 transition-colors"
             >
               <Bot size={14} className="text-accent shrink-0" />
-              <span className="font-medium">执行过程</span>
+              <span className="font-medium">{t('chat.process')}</span>
               {totalCount > 0 && (
                 <span className="text-ink-muted">({doneCount}/{totalCount})</span>
               )}
@@ -134,7 +136,7 @@ export default function MessageItem({ message, isStreaming, isThinking }) {
         ) : isStreaming && !isThinking && !hasReasoning && !hasAgentProcess && messageLevelTools.length === 0 ? (
           <div className="flex items-center gap-2 py-2 text-ink-muted text-[14px]">
             <Loader size={14} className="animate-spin" />
-            <span>思考中...</span>
+            <span>{t('chat.thinking')}</span>
           </div>
         ) : null}
       </div>

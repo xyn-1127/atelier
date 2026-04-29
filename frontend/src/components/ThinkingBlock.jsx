@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Brain } from 'lucide-react'
+import { useLang } from '../i18n'
 
 export default function ThinkingBlock({ content, isStreaming }) {
   const [open, setOpen] = useState(false)
+  const { t } = useLang()
 
   // Only render when there is actual content or actively streaming reasoning
   if (!content && !isStreaming) return null
@@ -14,7 +16,7 @@ export default function ThinkingBlock({ content, isStreaming }) {
         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-ink-secondary hover:text-ink transition-colors"
       >
         <Brain size={13} className="text-accent" />
-        <span className="font-medium">深度思考</span>
+        <span className="font-medium">{t('thinking.title')}</span>
         {isStreaming && (
           <span className="flex gap-0.5 ml-1">
             <span className="w-1 h-1 rounded-full bg-accent anim-pulse" />

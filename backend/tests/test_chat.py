@@ -20,7 +20,7 @@ def test_create_chat():
     ws_id, chat_id = create_workspace_and_chat()
     response = client.get(f"/api/chats/{chat_id}")
     assert response.status_code == 200
-    assert response.json()["title"] == "新对话"
+    assert response.json()["title"] == "New chat"
     assert response.json()["workspace_id"] == ws_id
 
 

@@ -32,20 +32,20 @@ def save_note(workspace_id: int, title: str) -> str:
     """保存笔记。内容自动使用 Agent 本轮已生成的文本，无需手动传入。"""
     content = get_current_content()
     if not content.strip():
-        return "错误：没有可保存的内容，请先生成文档再调用保存。"
+        return "Error: nothing to save. Output the document first, then call save_note."
 
     db = SessionLocal()
     try:
         workspace = db.get(Workspace, workspace_id)
         if not workspace:
-            return f"错误：工作区 {workspace_id} 不存在"
+            return f"Error: workspace {workspace_id} not found"
 
         note = Note(workspace_id=workspace_id, title=title, content=content)
         db.add(note)
         db.commit()
         db.refresh(note)
 
-        return f"笔记已保存：「{title}」(id={note.id}，{len(content)}字)"
+        return f'Note saved: "{title}" (id={note.id}, {len(content)} chars)'
     finally:
         db.close()
 
@@ -60,10 +60,10 @@ def create_writer_tools() -> ToolRegistry:
 
     registry.register(Tool(
         name="save_note",
-        description="保存笔记。内容自动使用你本轮已输出的文本，只需提供标题。先输出完整文档内容，再调用此工具保存。",
+        description="Save the document you just wrote as a note. The content is taken from your last output automatically — you only supply a title. Output the full Markdown first, then call this tool.",
         parameters={
-            "workspace_id": {"type": "integer", "description": "工作区 ID"},
-            "title": {"type": "string", "description": "笔记标题"},
+            "workspace_id": {"type": "integer", "description": "workspace ID"},
+            "title": {"type": "string", "description": "note title"},
         },
         function=save_note,
     ))
